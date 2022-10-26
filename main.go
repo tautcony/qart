@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/astaxie/beego"
+	"github.com/beego/beego"
 	"github.com/beego/i18n"
 	_ "github.com/tautcony/qart/routers"
 	"os"

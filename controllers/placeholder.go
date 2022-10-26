@@ -3,7 +3,7 @@ package controllers
 import (
 	"bytes"
 	"fmt"
-	"github.com/astaxie/beego"
+	"github.com/beego/beego"
 	"html/template"
 	"math/rand"
 	"strconv"

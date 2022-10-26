@@ -3,8 +3,8 @@ package base
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
+	"github.com/beego/beego"
+	"github.com/beego/beego/logs"
 	"github.com/beego/i18n"
 	"github.com/tautcony/qart/models/response"
 	"golang.org/x/text/language"

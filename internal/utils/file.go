@@ -1,9 +1,8 @@
 package utils
 
 import (
-	"github.com/astaxie/beego/logs"
+	"github.com/beego/beego/logs"
 	"github.com/tautcony/qart/internal"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -24,7 +23,7 @@ func Read(path string) ([]byte, *internal.FileInfo, error) {
 		Size:    dir.Size(),
 		IsDir:   dir.IsDir(),
 	}
-	data, err := ioutil.ReadFile(p)
+	data, err := os.ReadFile(p)
 	return data, fi, err
 }
 
@@ -34,8 +33,7 @@ func Write(path string, data []byte) error {
 	if err != nil {
 		panic(err)
 	}
-
-	return ioutil.WriteFile(p, data, 0666)
+	return os.WriteFile(p, data, 0666)
 }
 
 func Remove(path string) error {

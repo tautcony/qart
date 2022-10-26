@@ -3,7 +3,8 @@ package utils
 import "path/filepath"
 
 func getStoragePath(elem ...string) string {
-	return filepath.Join("storage", filepath.Join(elem...))
+	filePath := filepath.Join("storage", filepath.Join(elem...))
+	return filePath
 }
 
 func GetFlagPath(name string) string {
