@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/tautcony/qart/controllers/base"
+	"github.com/tautcony/qart/controllers/constants"
 	"github.com/tautcony/qart/controllers/sessionutils"
+	"github.com/tautcony/qart/internal/qr"
 	"github.com/tautcony/qart/internal/utils"
-	"github.com/tautcony/qart/models/qr"
 	"github.com/tautcony/qart/models/request"
 )
 
@@ -19,16 +20,15 @@ func (c *ShareController) CreateShare() {
 	var err error
 	share := &request.Share{}
 	if err = json.Unmarshal(c.Ctx.Input.RequestBody, share); err != nil {
-		c.Fail(nil, 2, err.Error())
+		c.Fail(nil, constants.RequestInvalid, err.Error())
 		return
 	}
-	config := c.GetSession(sessionutils.SessionKey(share.Image, "config"))
-	if config == nil {
-		c.Fail(nil, 2, "Image not found")
+	qrImage, ok := c.GetSession(sessionutils.SessionKey(share.Image, "config")).(*qr.Image)
+	if ok == false {
+		c.Fail(nil, constants.ImageNotFound, "Image not found")
 		return
 	}
-	image := config.(*qr.Image)
-	pngData := image.Code.PNG()
+	pngData := qrImage.Code.PNG()
 	sha := fmt.Sprintf("%x", sha256.Sum256(pngData))
 	if err := utils.Write(utils.GetQrsavePath(sha), pngData); err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func (c *ShareController) CreateShare() {
 		Id string `json:"id"`
 	}{
 		sha,
-	}, 0)
+	}, constants.Success)
 }
 
 func (c *ShareController) Get() {

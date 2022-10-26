@@ -2,7 +2,7 @@ package qr
 
 import (
 	"bytes"
-	"fmt"
+	"log"
 	"rsc.io/qr/gf256"
 )
 
@@ -50,7 +50,7 @@ func newBlock(nd, nc int, rs *gf256.RSEncoder, dat, cdata []byte) *BitBlock {
 func (b *BitBlock) check() {
 	b.RS.ECC(b.B[:b.DataBytes], b.Tmp)
 	if !bytes.Equal(b.B[b.DataBytes:], b.Tmp) {
-		fmt.Printf("ecc mismatch\n%x\n%x\n", b.B[b.DataBytes:], b.Tmp)
+		log.Printf("ecc mismatch\n%x\n%x\n", b.B[b.DataBytes:], b.Tmp)
 		panic("mismatch")
 	}
 }

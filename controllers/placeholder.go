@@ -86,5 +86,5 @@ func (p *PlaceHolderController) Get() {
 		panic(err)
 	}
 	p.Ctx.Output.ContentType(".svg")
-	p.Ctx.Output.Body(svg.Bytes())
+	_ = p.Ctx.Output.Body(svg.Bytes())
 }

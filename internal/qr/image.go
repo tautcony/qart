@@ -3,9 +3,9 @@ package qr
 import (
 	"bytes"
 	"fmt"
+	"github.com/tautcony/qart/internal/utils"
 	"log"
 	"math/rand"
-	"github.com/tautcony/qart/internal/utils"
 	"rsc.io/qr"
 	"rsc.io/qr/coding"
 	"rsc.io/qr/gf256"
@@ -14,13 +14,13 @@ import (
 
 type Image struct {
 	Name     string
-	Target   [][]int
+	Target   [][]byte
 	Dx       int
 	Dy       int
 	URL      string
-	Tag      string
-	Version  int
-	Mask     int
+	Version  coding.Version
+	Mask     coding.Mask
+	Level    coding.Level
 	Scale    int
 	Rotation int
 	Size     int
@@ -55,7 +55,7 @@ func (m *Image) target(x, y int) (targ byte, contrast int) {
 	if v0 < 0 {
 		return 255, -1
 	}
-	targ = byte(v0)
+	targ = v0
 
 	n := 0
 	sum := 0
@@ -64,7 +64,7 @@ func (m *Image) target(x, y int) (targ byte, contrast int) {
 	for dy := -del; dy <= del; dy++ {
 		for dx := -del; dx <= del; dx++ {
 			if 0 <= ty+dy && ty+dy < len(m.Target) && 0 <= tx+dx && tx+dx < len(m.Target[ty+dy]) {
-				v := m.Target[ty+dy][tx+dx]
+				v := int(m.Target[ty+dy][tx+dx])
 				sum += v
 				sumsq += v * v
 				n++
@@ -78,45 +78,11 @@ func (m *Image) target(x, y int) (targ byte, contrast int) {
 }
 
 func (m *Image) rotate(p *coding.Plan, rot int) {
-	if rot == 0 {
-		return
-	}
-
-	N := len(p.Pixel)
-	pix := make([][]coding.Pixel, N)
-	apix := make([]coding.Pixel, N*N)
-	for i := range pix {
-		pix[i], apix = apix[:N], apix[N:]
-	}
-
-	switch rot {
-	case 0:
-		// ok
-	case 1:
-		for y := 0; y < N; y++ {
-			for x := 0; x < N; x++ {
-				pix[y][x] = p.Pixel[x][N-1-y]
-			}
-		}
-	case 2:
-		for y := 0; y < N; y++ {
-			for x := 0; x < N; x++ {
-				pix[y][x] = p.Pixel[N-1-y][N-1-x]
-			}
-		}
-	case 3:
-		for y := 0; y < N; y++ {
-			for x := 0; x < N; x++ {
-				pix[y][x] = p.Pixel[N-1-x][y]
-			}
-		}
-	}
-
-	p.Pixel = pix
+	utils.RotatePixel(p.Pixel, rot)
 }
 
 func (m *Image) Encode() error {
-	p, err := coding.NewPlan(coding.Version(m.Version), coding.L, coding.Mask(m.Mask))
+	p, err := coding.NewPlan(m.Version, m.Level, m.Mask)
 	if err != nil {
 		return err
 	}
@@ -379,7 +345,7 @@ Again:
 			// We know the 512, 256, 128, 64, 32 bits are all set.
 			// Pick one at random to clear.  This will break some
 			// checksum bits, but so be it.
-			log.Println("Oops - too many 1 bits", i, v)
+			// log.Println("Oops - too many 1 bits", i, v)
 			pinfo := &pixByOff[bbit+10*i+3] // TODO random
 			pinfo.Contrast = 1e9 >> 8
 			pinfo.HardZero = true

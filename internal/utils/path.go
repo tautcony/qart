@@ -14,6 +14,6 @@ func GetQrsavePath(name string) string {
 	return getStoragePath("qrsave", name)
 }
 
-func GetUploadPath(name string) string {
-	return getStoragePath("upload", name)
+func GetAssetsPath(name string) string {
+	return filepath.Join("assets", name)
 }

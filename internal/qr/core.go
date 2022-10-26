@@ -2,23 +2,24 @@ package qr
 
 import (
 	"github.com/nfnt/resize"
-	"github.com/tautcony/qart/models/qr"
 	"github.com/tautcony/qart/models/request"
 	"image"
 	"image/color"
 	_ "image/png"
+	"rsc.io/qr/coding"
 )
 
-func Draw(op *request.Operation, i image.Image) (*qr.Image, error) {
-	target := makeTarget(i, 17+4*op.Version+op.Size)
+func Draw(op *request.Operation, i image.Image) (*Image, error) {
+	target := MakeTarget(i, 17+4*int(op.Version)+op.Size)
 
-	qrImage := &qr.Image{
+	qrImage := &Image{
 		Name:         op.Image,
 		Dx:           op.Dx,
 		Dy:           op.Dy,
 		URL:          op.URL,
 		Version:      op.GetVersion(),
-		Mask:         op.Mask,
+		Mask:         op.GetMask(),
+		Level:        coding.L,
 		RandControl:  op.RandControl,
 		Dither:       op.Dither,
 		OnlyDataBits: op.OnlyDataBits,
@@ -36,7 +37,7 @@ func Draw(op *request.Operation, i image.Image) (*qr.Image, error) {
 	return qrImage, nil
 }
 
-func makeTarget(i image.Image, max int) [][]int {
+func MakeTarget(i image.Image, max int) [][]byte {
 	b := i.Bounds()
 	dx, dy := max, max
 	if b.Dx() > b.Dy() {
@@ -48,20 +49,15 @@ func makeTarget(i image.Image, max int) [][]int {
 
 	b = thumbnail.Bounds()
 	dx, dy = b.Dx(), b.Dy()
-	target := make([][]int, dy)
-	arr := make([]int, dx*dy)
+	target := make([][]byte, dy)
+	arr := make([]byte, dx*dy)
 	for y := 0; y < dy; y++ {
 		target[y], arr = arr[:dx], arr[dx:]
 		row := target[y]
 		for x := 0; x < dx; x++ {
 			p := thumbnail.At(x, y)
-			_, _, _, a := p.RGBA()
 			luminance := color.Gray16Model.Convert(p).(color.Gray16)
-			if a == 0 {
-				row[x] = -1
-			} else {
-				row[x] = int(luminance.Y >> 8)
-			}
+			row[x] = byte(luminance.Y >> 8)
 		}
 	}
 	return target

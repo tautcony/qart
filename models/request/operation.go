@@ -3,24 +3,25 @@ package request
 import (
 	"github.com/creasty/defaults"
 	"math/rand"
+	"rsc.io/qr/coding"
 	"strconv"
 )
 
 type Operation struct {
-	Image        string `json:"image" default:"default"`
-	Dx           int    `json:"dx" default:"4"`
-	Dy           int    `json:"dy" default:"4"`
-	Size         int    `json:"size" default:"0"`
-	URL          string `json:"url" default:"https://example.com"`
-	Version      int    `json:"version" default:"6"` // range in [0,9]
-	Mask         int    `json:"mask" default:"2"`
-	RandControl  bool   `json:"randcontrol" default:"false"`
-	Dither       bool   `json:"dither" default:"false"`
-	OnlyDataBits bool   `json:"onlydatabits" default:"false"`
-	SaveControl  bool   `json:"savecontrol" default:"false"`
-	Seed         string `json:"seed"`
-	Scale        int    `json:"scale" default:"4"`
-	Rotation     int    `json:"rotation" default:"0"` // range in [0,3]
+	Image        string         `json:"image" default:"default"`
+	Dx           int            `json:"dx" default:"4"`
+	Dy           int            `json:"dy" default:"4"`
+	Size         int            `json:"size" default:"0"`
+	URL          string         `json:"url" default:"https://example.com"`
+	Version      coding.Version `json:"version" default:"6"`
+	Mask         coding.Mask    `json:"mask" default:"2"`
+	RandControl  bool           `json:"randcontrol" default:"false"`
+	Dither       bool           `json:"dither" default:"false"`
+	OnlyDataBits bool           `json:"onlydatabits" default:"false"`
+	SaveControl  bool           `json:"savecontrol" default:"false"`
+	Seed         string         `json:"seed"`
+	Scale        int            `json:"scale" default:"8"`
+	Rotation     int            `json:"rotation" default:"0"` // range in [0,3]
 }
 
 func (op *Operation) SetDefaults() {
@@ -29,14 +30,24 @@ func (op *Operation) SetDefaults() {
 	}
 }
 
-func (op *Operation) GetVersion() int {
-	if op.Version < 0 {
-		return 0
+func (op *Operation) GetVersion() coding.Version {
+	if op.Version < 1 {
+		return 1
 	}
-	if op.Version > 9 {
-		return 9
+	if op.Version > 40 {
+		return 40
 	}
 	return op.Version
+}
+
+func (op *Operation) GetMask() coding.Mask {
+	if op.Mask < 0 {
+		return 0
+	}
+	if op.Mask > 7 {
+		return 7
+	}
+	return op.Mask
 }
 
 func (op *Operation) GetRotation() int {

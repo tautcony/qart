@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
+	"github.com/tautcony/qart/controllers/base"
 )
 
 type MainController struct {
-	beego.Controller
+	base.QArtController
 }
 
 func (c *MainController) Get() {

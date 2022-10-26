@@ -1,16 +1,16 @@
 package utils
 
 import (
+	"github.com/astaxie/beego/logs"
+	"github.com/tautcony/qart/internal"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
-	"github.com/tautcony/qart/models"
 )
 
-func Read(path string) ([]byte, *models.FileInfo, error) {
+func Read(path string) ([]byte, *internal.FileInfo, error) {
 	p, err := filepath.Abs(path)
-	log.Printf("Read <- %s\n", p)
+	logs.Debug("Read <- %v", p)
 	if err != nil {
 		panic(err)
 	}
@@ -18,7 +18,7 @@ func Read(path string) ([]byte, *models.FileInfo, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	fi := &models.FileInfo{
+	fi := &internal.FileInfo{
 		Name:    dir.Name(),
 		ModTime: dir.ModTime(),
 		Size:    dir.Size(),
@@ -30,7 +30,7 @@ func Read(path string) ([]byte, *models.FileInfo, error) {
 
 func Write(path string, data []byte) error {
 	p, err := filepath.Abs(path)
-	log.Printf("Write ->: %s\n", p)
+	logs.Debug("Write ->: %v", p)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +40,7 @@ func Write(path string, data []byte) error {
 
 func Remove(path string) error {
 	p, err := filepath.Abs(path)
-	log.Printf("Remove x %s\n", p)
+	logs.Debug("Remove x %v", p)
 	if err != nil {
 		panic(err)
 	}

@@ -124,9 +124,7 @@ modules.xml
 
 storage/qrsave/*
 !storage/qrsave/.gitkeep
-storage/upload/*
-!storage/upload/.gitkeep
-!storage/upload/default.png
+!assets/default.png
 storage/flag/*
 !storage/flag/.gitkeep
 
