@@ -3,13 +3,14 @@ package qr
 import (
 	"bytes"
 	"fmt"
-	"github.com/tautcony/qart/internal/utils"
-	"log"
 	"math/rand"
+	"sort"
+
+	"github.com/rs/zerolog/log"
+	"github.com/tautcony/qart/internal/utils"
 	"rsc.io/qr"
 	"rsc.io/qr/coding"
 	"rsc.io/qr/gf256"
-	"sort"
 )
 
 type Image struct {
@@ -364,7 +365,7 @@ Again:
 	coding.Num(num).Encode(&b1, p.Version)
 	b1.AddCheckBytes(p.Version, p.Level)
 	if !bytes.Equal(b.Bytes(), b1.Bytes()) {
-		log.Printf("mismatch\n%d %x\n%d %x\n", len(b.Bytes()), b.Bytes(), len(b1.Bytes()), b1.Bytes())
+		log.Error().Int("len1", len(b.Bytes())).Hex("bytes1", b.Bytes()).Int("len2", len(b1.Bytes())).Hex("bytes2", b1.Bytes()).Msg("mismatch")
 		panic("byte mismatch")
 	}
 
@@ -377,7 +378,7 @@ Again:
 		for y, row := range expect {
 			for x, pix := range row {
 				if cc.Black(x, y) != pix {
-					log.Println("mismatch", x, y, p.Pixel[y][x].String())
+					log.Error().Int("x", x).Int("y", y).Str("pixel", p.Pixel[y][x].String()).Msg("mismatch")
 				}
 			}
 		}

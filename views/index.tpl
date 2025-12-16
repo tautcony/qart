@@ -34,7 +34,7 @@
                     <img id="op-qr-code"
                          class="figure-img img-fluid rounded"
                          src="/image/placeholder/400x400" alt="QR Code"
-                         data-toggle="tooltip" data-placement="top" title='{{i18n .Lang "index.rotate"}}'
+                         data-toggle="tooltip" data-bs-placement="top" title='{{i18n .Lang "index.rotate"}}'
                     />
                 </figure>
                 <div class="row g-3">

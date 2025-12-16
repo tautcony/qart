@@ -1,15 +1,16 @@
 package utils
 
 import (
-	"github.com/tautcony/qart/internal"
-	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/rs/zerolog/log"
+	"github.com/tautcony/qart/internal"
 )
 
 func Read(path string) ([]byte, *internal.FileInfo, error) {
 	p, err := filepath.Abs(path)
-	log.Printf("Read <- %v", p)
+	log.Debug().Str("path", p).Msg("Read")
 	if err != nil {
 		panic(err)
 	}
@@ -29,7 +30,7 @@ func Read(path string) ([]byte, *internal.FileInfo, error) {
 
 func Write(path string, data []byte) error {
 	p, err := filepath.Abs(path)
-	log.Printf("Write ->: %v", p)
+	log.Debug().Str("path", p).Msg("Write")
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +39,7 @@ func Write(path string, data []byte) error {
 
 func Remove(path string) error {
 	p, err := filepath.Abs(path)
-	log.Printf("Remove x %v", p)
+	log.Debug().Str("path", p).Msg("Remove")
 	if err != nil {
 		panic(err)
 	}
