@@ -1,8 +1,14 @@
-version: "3.8"
 services: 
   qart:
     image: local/qart
     build:
       context: .
+      dockerfile: Dockerfile
+    container_name: qart
+    restart: unless-stopped
     ports:
-      - 8888:8080
+      - "8080:8080"
+    volumes:
+      - ./storage:/app/storage
+    environment:
+      - GIN_MODE=release

@@ -1,13 +1,21 @@
 package controllers
 
 import (
-	"github.com/tautcony/qart/controllers/base"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
-type MainController struct {
-	base.QArtController
-}
+func Index(c *gin.Context) {
+	// Get language data from context (set by i18n middleware)
+	lang, _ := c.Get("Lang")
+	curLang, _ := c.Get("CurLang")
+	restLangs, _ := c.Get("RestLangs")
+	i18nFunc, _ := c.Get("i18n")
 
-func (c *MainController) Get() {
-	c.TplName = "index.tpl"
+	c.HTML(http.StatusOK, "index.tpl", gin.H{
+		"Lang":      lang,
+		"CurLang":   curLang,
+		"RestLangs": restLangs,
+		"i18n":      i18nFunc,
+	})
 }

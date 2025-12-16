@@ -6,38 +6,49 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/beego/beego/logs"
+	"github.com/gin-gonic/gin"
 	"github.com/tautcony/qart/controllers/base"
 	"github.com/tautcony/qart/controllers/constants"
 	"github.com/tautcony/qart/controllers/sessionutils"
 	"github.com/tautcony/qart/internal/qr"
 	"github.com/tautcony/qart/internal/utils"
+	"github.com/tautcony/qart/middleware"
 	"github.com/tautcony/qart/models/request"
 	"image"
+	_ "image/gif"
+	_ "image/jpeg"
 	"image/png"
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/webp"
+	"log"
+	"net/http"
+	"strings"
 )
 
-type UploadController struct {
-	base.QArtController
-}
-
-type RenderController struct {
-	base.QArtController
-}
-
-// @Title Upload image
-// @Description Upload image for further operation
-// @Success 200 {object} models.response.BaseResponse
-// @Param   image     formData   string true       "upload file name"
-// @router / [post]
-func (c *UploadController) Post() {
-	f, header, err := c.GetFile("image")
+// Upload handles image upload
+func Upload(c *gin.Context) {
+	f, header, err := c.Request.FormFile("image")
 	if err != nil {
-		logs.Error("get file err %v", err)
-		c.Fail(nil, constants.UploadFailed, err.Error())
+		log.Printf("get file err %v", err)
+		base.Fail(c, nil, constants.UploadFailed, err.Error())
 		return
 	}
-	logs.Debug("get file %v with size: %v", header.Filename, header.Size)
+	log.Printf("get file %v with size: %v", header.Filename, header.Size)
+
+	// Check file extension
+	filename := strings.ToLower(header.Filename)
+	supportedFormats := []string{".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
+	isSupported := false
+	for _, ext := range supportedFormats {
+		if strings.HasSuffix(filename, ext) {
+			isSupported = true
+			break
+		}
+	}
+	if !isSupported {
+		base.Fail(c, nil, constants.UploadFailed, "Unsupported image format. Supported formats: JPG, PNG, GIF, BMP, WebP")
+		return
+	}
 
 	img, err := utils.GetImageThumbnail(f)
 	defer func() {
@@ -47,85 +58,101 @@ func (c *UploadController) Post() {
 		}
 	}()
 	if err != nil {
-		logs.Error("down sampling err %v", err)
-		c.Fail(nil, constants.ConvertFailed, err.Error())
+		log.Printf("down sampling err %v", err)
+		base.Fail(c, nil, constants.ConvertFailed, err.Error())
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, img); err != nil {
-		c.Fail(nil, constants.EncodeFailed, err.Error())
+		base.Fail(c, nil, constants.EncodeFailed, err.Error())
 		return
 	}
 	tag := fmt.Sprintf("%x", sha256.Sum256(buf.Bytes()))
-	c.SetSession(sessionutils.SessionKey(tag, constants.SessionImageKey), img) // store image data in session
+	middleware.SetSession(c, sessionutils.SessionKey(tag, constants.SessionImageKey), img)
 
-	c.Success(struct {
+	base.Success(c, struct {
 		Id string `json:"id"`
 	}{
 		tag,
 	}, constants.Success)
 }
 
-func (c *RenderController) Post() {
+func Render(c *gin.Context) {
 	operation, err := request.NewOperation()
 	if err != nil {
-		c.Fail(nil, constants.OperationInvalid, err.Error())
+		base.Fail(c, nil, constants.OperationInvalid, err.Error())
 		return
 	}
-	if err = json.Unmarshal(c.Ctx.Input.RequestBody, operation); err != nil {
-		c.Fail(nil, constants.RequestInvalid, err.Error())
+	
+	body, err := c.GetRawData()
+	if err != nil {
+		base.Fail(c, nil, constants.RequestInvalid, err.Error())
 		return
 	}
+	
+	if err = json.Unmarshal(body, operation); err != nil {
+		base.Fail(c, nil, constants.RequestInvalid, err.Error())
+		return
+	}
+	
 	sessionKey := sessionutils.SessionKey(operation.Image, constants.SessionImageKey)
-	if operation.Image == "default" && c.GetSession(sessionKey) == nil {
-		logs.Debug("Load default image from assets")
-		data, _, _ := utils.Read(utils.GetAssetsPath("default.png"))
-		defaultImage, err := png.Decode(bytes.NewBuffer(data))
-		if err == nil {
-			c.SetSession(sessionKey, defaultImage)
+	if operation.Image == "default" {
+		if _, ok := middleware.GetSession(c, sessionKey); !ok {
+			log.Println("Load default image from assets")
+			data, _, _ := utils.Read(utils.GetAssetsPath("default.png"))
+			defaultImage, err := png.Decode(bytes.NewBuffer(data))
+			if err == nil {
+				middleware.SetSession(c, sessionKey, defaultImage)
+			}
 		}
 	}
 
-	uploadImage, ok := c.GetSession(sessionKey).(image.Image)
-	if ok == false {
-		c.Fail(nil, constants.ImageNotFound, "image not found, please upload first")
+	uploadImageInterface, ok := middleware.GetSession(c, sessionKey)
+	if !ok {
+		base.Fail(c, nil, constants.ImageNotFound, "image not found, please upload first")
 		return
 	}
+	
+	uploadImage, ok := uploadImageInterface.(image.Image)
+	if !ok {
+		base.Fail(c, nil, constants.ImageNotFound, "image not found, please upload first")
+		return
+	}
+	
 	img, err := qr.Draw(operation, uploadImage)
 	if err != nil {
-		c.Fail(nil, constants.EncodeFailed, err.Error())
+		base.Fail(c, nil, constants.EncodeFailed, err.Error())
 		return
 	}
+	
 	var data []byte
+
 	switch {
 	case img.SaveControl:
 		data = img.Control
 	default:
 		data = img.Code.PNG()
 	}
-	c.SetSession(sessionutils.SessionKey(operation.Image, constants.SessionConfigKey), img)
-	if c.GetString("debug") == "1" {
-		c.Ctx.Output.ContentType(".png")
-		err = c.Ctx.Output.Body(data)
-		if err != nil {
-			panic(err)
-		}
+	middleware.SetSession(c, sessionutils.SessionKey(operation.Image, constants.SessionConfigKey), img)
+	
+	if c.Query("debug") == "1" {
+		c.Data(http.StatusOK, "image/png", data)
 		return
 	}
 
-	c.Success(struct {
+	base.Success(c, struct {
 		Image string `json:"image"`
 	}{
 		"data:image/png;base64," + base64.StdEncoding.EncodeToString(data),
 	}, constants.Success)
 }
 
-func (c *RenderController) Config() {
+func RenderConfig(c *gin.Context) {
 	operation, err := request.NewOperation()
 	if err != nil {
-		c.Fail(nil, constants.Panic, err.Error())
+		base.Fail(c, nil, constants.Panic, err.Error())
 		return
 	}
-	c.Success(operation, constants.Success)
+	base.Success(c, operation, constants.Success)
 }

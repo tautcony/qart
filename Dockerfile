@@ -1,21 +1,43 @@
-FROM library/golang
+# Build stage
+FROM golang:1.24-alpine AS builder
 
-# Recompile the standard library without CGO
-RUN CGO_ENABLED=0 go install -a std
+# Install build dependencies
+RUN apk add --no-cache git
 
 # Setup for proxy
 RUN go env -w GO111MODULE=on && go env -w GOPROXY=https://goproxy.io,direct
 
-ENV APP_DIR $GOPATH/src/qart
-RUN mkdir -p $APP_DIR
+WORKDIR /build
 
-# Set the entrypoint
-ADD . $APP_DIR
-WORKDIR $APP_DIR
-ENTRYPOINT ($APP_DIR/qart)
-CMD ["--prod"]
+# Copy go mod files
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Compile the binary and statically link
-RUN cd $APP_DIR && CGO_ENABLED=0 go build -ldflags '-d -w -s'
+# Copy source code
+COPY . .
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags='-w -s' -o qart .
+
+# Runtime stage
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates tzdata
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /build/qart .
+
+# Copy necessary files
+COPY --from=builder /build/conf ./conf
+COPY --from=builder /build/views ./views
+COPY --from=builder /build/static ./static
+
+# Create storage directories
+RUN mkdir -p storage/flag storage/qrsave
 
 EXPOSE 8080
+
+ENTRYPOINT ["./qart"]
+CMD ["--prod", "--port", "8080"]

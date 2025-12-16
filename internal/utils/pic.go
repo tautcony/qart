@@ -7,7 +7,11 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	_ "image/gif"
+	_ "image/jpeg"
 	"image/png"
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/webp"
 	"io"
 	"path"
 )

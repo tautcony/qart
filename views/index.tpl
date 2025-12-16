@@ -68,7 +68,7 @@
                         <button id="op-upload" type="button" class="btn btn-primary file">
                             {{i18n .Lang "index.upload"}}
                         </button>
-                        <input type="file" id="op-upload-input" accept="image/*" style="display:none" />
+                        <input type="file" id="op-upload-input" accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp,image/webp" style="display:none" />
                         <input class="form-control" type="text" value="https://example.com" id="op-url" />
                     </div>
                     <div class="form-check form-switch col-md-6">

@@ -1,15 +1,15 @@
 package utils
 
 import (
-	"github.com/beego/beego/logs"
 	"github.com/tautcony/qart/internal"
+	"log"
 	"os"
 	"path/filepath"
 )
 
 func Read(path string) ([]byte, *internal.FileInfo, error) {
 	p, err := filepath.Abs(path)
-	logs.Debug("Read <- %v", p)
+	log.Printf("Read <- %v", p)
 	if err != nil {
 		panic(err)
 	}
@@ -29,7 +29,7 @@ func Read(path string) ([]byte, *internal.FileInfo, error) {
 
 func Write(path string, data []byte) error {
 	p, err := filepath.Abs(path)
-	logs.Debug("Write ->: %v", p)
+	log.Printf("Write ->: %v", p)
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +38,7 @@ func Write(path string, data []byte) error {
 
 func Remove(path string) error {
 	p, err := filepath.Abs(path)
-	logs.Debug("Remove x %v", p)
+	log.Printf("Remove x %v", p)
 	if err != nil {
 		panic(err)
 	}

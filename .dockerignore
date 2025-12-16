@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# Build artifacts
+qart
+*.exe
+*.test
+*.out
+
+# Storage (will be mounted as volume)
+storage/*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation
+README.md
+LICENSE
+
+# Tests
+tests/
+*_test.go
+
+# macOS
+.DS_Store

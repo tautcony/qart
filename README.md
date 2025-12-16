@@ -9,4 +9,4 @@ detail info https://research.swtch.com/qart
 Start with `docker-compose up -d`
 And stop with `docker-compose down`
 
-When running, the server is available at http://localhost:8888
+When running, the server is available at http://localhost:8080

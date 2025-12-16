@@ -1,22 +1,23 @@
 package main
 
 import (
-	"github.com/beego/beego"
-	"github.com/beego/i18n"
-	_ "github.com/tautcony/qart/routers"
-	"os"
+	"flag"
+	"github.com/gin-gonic/gin"
+	"github.com/tautcony/qart/routers"
 )
 
 func main() {
-	for _, argv := range os.Args {
-		if argv == "--prod" {
-			beego.BConfig.RunMode = "prod"
-		}
+	prod := flag.Bool("prod", false, "run in production mode")
+	port := flag.String("port", "8080", "port to listen on")
+	flag.Parse()
+
+	if *prod {
+		gin.SetMode(gin.ReleaseMode)
 	}
-	// Register template functions.
-	err := beego.AddFuncMap("i18n", i18n.Tr)
-	if err != nil {
+
+	r := routers.SetupRouter()
+	
+	if err := r.Run(":" + *port); err != nil {
 		panic(err)
 	}
-	beego.Run()
 }

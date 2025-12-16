@@ -3,16 +3,13 @@ package controllers
 import (
 	"bytes"
 	"fmt"
-	"github.com/beego/beego"
+	"github.com/gin-gonic/gin"
 	"html/template"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"strings"
 )
-
-type PlaceHolderController struct {
-	beego.Controller
-}
 
 type PlaceHolder struct {
 	Width  int
@@ -44,12 +41,13 @@ func GetTemplate() (*template.Template, error) {
 	return tpl, err
 }
 
-func (p *PlaceHolderController) Get() {
+func PlaceHolderHandler(c *gin.Context) {
 	width := 0
 	height := 0
 	var err error
-	size := p.Ctx.Input.Param(":size")
-	title := p.Ctx.Input.Param(":title")
+	size := c.Param("size")
+	title := c.Param("title")
+	
 	if size != "" {
 		seps := strings.Split(size, "x")
 		if len(seps) == 2 {
@@ -85,6 +83,5 @@ func (p *PlaceHolderController) Get() {
 	if err != nil {
 		panic(err)
 	}
-	p.Ctx.Output.ContentType(".svg")
-	_ = p.Ctx.Output.Body(svg.Bytes())
+	c.Data(http.StatusOK, "image/svg+xml", svg.Bytes())
 }

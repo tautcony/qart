@@ -1,23 +1,21 @@
 package controllers
 
 import (
-	"github.com/tautcony/qart/controllers/base"
+	"github.com/gin-gonic/gin"
 	"github.com/tautcony/qart/internal/qr/debug"
 	"github.com/tautcony/qart/internal/utils"
+	"net/http"
 	"rsc.io/qr"
 	"rsc.io/qr/coding"
+	"strconv"
 	"strings"
 )
 
-type DebugController struct {
-	base.QArtController
-}
-
-func (c *DebugController) Frame() {
-	version, _ := c.GetInt("version")
-	scale, _ := c.GetInt("scale")
-	level, _ := c.GetInt("level")
-	dots := c.GetString("dots")
+func DebugFrame(c *gin.Context) {
+	version, _ := strconv.Atoi(c.Query("version"))
+	scale, _ := strconv.Atoi(c.Query("scale"))
+	level, _ := strconv.Atoi(c.Query("level"))
+	dots := c.Query("dots")
 
 	if version == 0 {
 		version = 6
@@ -34,18 +32,14 @@ func (c *DebugController) Frame() {
 
 	frame := debug.MakeFrame("", 0, coding.Version(version), coding.Level(level), coding.Mask(0), scale, showDots)
 	data := utils.PngEncode(frame)
-	c.Ctx.Output.ContentType(".png")
-	err := c.Ctx.Output.Body(data)
-	if err != nil {
-		panic(err)
-	}
+	c.Data(http.StatusOK, "image/png", data)
 }
 
-func (c *DebugController) Mask() {
-	version, _ := c.GetInt("version")
-	scale, _ := c.GetInt("scale")
-	level, _ := c.GetInt("level")
-	mask, _ := c.GetInt("mask")
+func DebugMask(c *gin.Context) {
+	version, _ := strconv.Atoi(c.Query("version"))
+	scale, _ := strconv.Atoi(c.Query("scale"))
+	level, _ := strconv.Atoi(c.Query("level"))
+	mask, _ := strconv.Atoi(c.Query("mask"))
 
 	if version == 0 {
 		version = 6
@@ -59,19 +53,15 @@ func (c *DebugController) Mask() {
 
 	frame := debug.MakeMask("", 0, coding.Version(version), coding.Level(level), coding.Mask(mask), scale)
 	data := utils.PngEncode(frame)
-	c.Ctx.Output.ContentType(".png")
-	err := c.Ctx.Output.Body(data)
-	if err != nil {
-		panic(err)
-	}
+	c.Data(http.StatusOK, "image/png", data)
 }
 
-func (c *DebugController) Encode() {
-	version, _ := c.GetInt("version")
-	scale, _ := c.GetInt("scale")
-	level, _ := c.GetInt("level")
-	mask, _ := c.GetInt("mask")
-	content := coding.String(c.GetString("content"))
+func DebugEncode(c *gin.Context) {
+	version, _ := strconv.Atoi(c.Query("version"))
+	scale, _ := strconv.Atoi(c.Query("scale"))
+	level, _ := strconv.Atoi(c.Query("level"))
+	mask, _ := strconv.Atoi(c.Query("mask"))
+	content := coding.String(c.Query("content"))
 
 	if version == 0 {
 		version = 6
@@ -94,9 +84,5 @@ func (c *DebugController) Encode() {
 
 	code := &qr.Code{Bitmap: cc.Bitmap, Size: cc.Size, Stride: cc.Stride, Scale: 8}
 
-	c.Ctx.Output.ContentType(".png")
-	err = c.Ctx.Output.Body(code.PNG())
-	if err != nil {
-		panic(err)
-	}
+	c.Data(http.StatusOK, "image/png", code.PNG())
 }
